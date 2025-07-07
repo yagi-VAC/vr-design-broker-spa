@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VRイベント告知デザイン仲介サービス</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Tech -->
+    <!-- Application Structure Plan: レポートの線形的なスライド構造を、ユーザーの関心に基づいた非線形的な探索が可能なSPAに再設計しました。主要なナビゲーションを上部に固定し、「サービス概要」「料金プラン」「ご利用の流れ」「強み」「デザインアシスト」「Q&A」といったセクションに分けました。この構造は、ユーザー（特に潜在的なクライアント）が最も知りたい情報（料金やフロー）に直接アクセスできるようにするため、スライドを順に見るよりも遥かに高いユーザビリティを提供します。 -->
+    <!-- Visualization & Content Choices: 
+        - 料金プラン: Report Info -> 料金体系(5,000円〜)。Goal -> 価格の妥当性を比較・説得。Viz/Method -> Chart.jsを用いたインタラクティブな棒グラフ。Interaction -> プランを選択するとグラフが動的に変化。Justification -> 静的な数字よりも視覚的な比較の方が「リーズナブル」という価値提案を強力に裏付けられるため。
+        - ご利用の流れ: Report Info -> クライアント側・クリエイター側のフロー。Goal -> 複雑なプロセスを整理・明確化。Viz/Method -> タブ切り替え式のHTML/CSSフローチャート。Interaction -> タブクリックで表示が切り替わる。Justification -> 2つの異なる視点を明確に分離し、情報を整理して提示できるため。
+        - リスクと対策: Report Info -> 想定されるリスク。Goal -> 不安を解消し信頼を醸成。Viz/Method -> アコーディオン形式のQ&A。Interaction -> 質問をクリックすると回答が開く。Justification -> 「リスク」を「よくある質問」として再構成することで、よりポジティブでユーザーフレンドリーな印象を与え、能動的な情報開示の姿勢を示せるため。
+        - デザインアシスト: Report Info -> デザインコンセプトの提案。Goal -> クライアントのデザインイメージ具体化を支援。Viz/Method -> テキスト入力とLLMによるテキスト生成。Interaction -> ボタンクリックでLLMがデザインアイデアを生成・表示。Justification -> クライアントがデザイン依頼時に具体的なイメージを持ちやすくなり、仲介プロセスをスムーズにするため。-->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #F8F7F4;
+            color: #333;
+        }
+        .bg-primary { background-color: #6C63FF; }
+        .text-primary { color: #6C63FF; }
+        .border-primary { border-color: #6C63FF; }
+        .active-nav {
+            color: #6C63FF;
+            font-weight: 700;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4">
+            <nav class="flex justify-between items-center py-4">
+                <a href="#" class="text-xl font-bold text-primary">VR Design Broker</a>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#overview" class="nav-link hover:text-primary transition-colors">サービス概要</a>
+                    <a href="#pricing" class="nav-link hover:text-primary transition-colors">料金プラン</a>
+                    <a href="#flow" class="nav-link hover:text-primary transition-colors">ご利用の流れ</a>
+                    <a href="#strengths" class="nav-link hover:text-primary transition-colors">私たちの強み</a>
+                    <a href="#design-assist" class="nav-link hover:text-primary transition-colors">デザインアシスト ✨</a>
+                    <a href="#faq" class="nav-link hover:text-primary transition-colors">Q&A</a>
+                </div>
+                <a href="#contact" class="hidden md:inline-block bg-primary text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">お問い合わせ</a>
+                <button id="mobile-menu-button" class="md:hidden text-2xl">☰</button>
+            </nav>
+            <div id="mobile-menu" class="hidden md:hidden pb-4">
+                <a href="#overview" class="block py-2 text-center nav-link">サービス概要</a>
+                <a href="#pricing" class="block py-2 text-center nav-link">料金プラン</a>
+                <a href="#flow" class="block py-2 text-center nav-link">ご利用の流れ</a>
+                <a href="#strengths" class="block py-2 text-center nav-link">私たちの強み</a>
+                <a href="#design-assist" class="block py-2 text-center nav-link">デザインアシスト ✨</a>
+                <a href="#faq" class="block py-2 text-center nav-link">Q&A</a>
+                <a href="#contact" class="block mt-2 text-center bg-primary text-white font-bold py-2 px-4 rounded-lg">お問い合わせ</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="py-20 md:py-32 bg-white">
+            <div class="container mx-auto px-4 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold mb-4 leading-tight">あなたのVRイベントに、<br><span class="text-primary">プロのデザイン</span>を。</h1>
+                <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-8">面倒なデザイナー探しはもう不要。高品質なイベントポスターやロゴを、驚くほどリーズナブルな価格でご提供します。</p>
+                <a href="#pricing" class="bg-primary text-white font-bold py-3 px-8 rounded-lg text-lg hover:opacity-90 transition-opacity">料金プランを見る</a>
+            </div>
+        </section>
+
+        <!-- Overview Section -->
+        <section id="overview" class="py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold">サービス概要</h2>
+                    <p class="text-gray-600 mt-2">VRイベント主催者の「困った」を解決します。</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8 text-center">
+                    <div class="bg-white p-8 rounded-xl shadow-md">
+                        <div class="text-4xl mb-4">🤝</div>
+                        <h3 class="text-xl font-bold mb-2">手軽さ</h3>
+                        <p class="text-gray-600">面倒なデザイナー探しや価格交渉、契約手続きは全て私たちが代行。あなたはイベントの準備に集中できます。</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-md">
+                        <div class="text-4xl mb-4">💰</div>
+                        <h3 class="text-xl font-bold mb-2">リーズナブル</h3>
+                        <p class="text-gray-600">個人や小規模コミュニティでも依頼しやすい価格設定。予算を気にせずクオリティを追求できます。</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-md">
+                        <div class="text-4xl mb-4">✨</div>
+                        <h3 class="text-xl font-bold mb-2">高品質</h3>
+                        <p class="text-gray-600">VRカルチャーを理解した厳選クリエイターが、あなたのイベントの魅力を最大限に引き出すデザインを制作します。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section id="pricing" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold">料金プラン</h2>
+                    <p class="text-gray-600 mt-2">あなたのニーズに合わせた柔軟なプランをご用意しました。</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                    <div id="plan-poster" class="pricing-card border-2 border-primary p-8 rounded-xl cursor-pointer">
+                        <h3 class="text-2xl font-bold">ポスタープラン</h3>
+                        <p class="text-gray-500 mb-4">イベントの顔となる告知ポスター</p>
+                        <p class="text-4xl font-bold mb-4">5,000円<span class="text-lg font-normal">〜</span></p>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>✓ 高解像度ポスターデータ</li>
+                            <li>✓ SNS告知に最適化</li>
+                            <li>✓ 修正2回まで無料</li>
+                        </ul>
+                    </div>
+                    <div id="plan-logo" class="pricing-card border p-8 rounded-xl cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
+                        <h3 class="text-2xl font-bold">ロゴプラン</h3>
+                        <p class="text-gray-500 mb-4">記憶に残るオリジナルロゴ</p>
+                        <p class="text-4xl font-bold mb-4">10,000円<span class="text-lg font-normal">〜</span></p>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>✓ ロゴデータ一式（背景透過含む）</li>
+                            <li>✓ 商用利用可能</li>
+                            <li>✓ 複数パターン提案</li>
+                        </ul>
+                    </div>
+                    <div id="plan-set" class="pricing-card border p-8 rounded-xl cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
+                        <h3 class="text-2xl font-bold">セットプラン</h3>
+                        <p class="text-gray-500 mb-4">ポスターもロゴもお得に</p>
+                        <p class="text-4xl font-bold mb-4">12,000円<span class="text-lg font-normal">〜</span></p>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>✓ ポスタープランの内容</li>
+                            <li>✓ ロゴプランの内容</li>
+                            <li>✓ 統一感のあるブランディング</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="text-center mb-8">
+                    <h3 class="text-2xl font-bold" id="chart-title">ポスタープランの価格比較</h3>
+                    <p class="text-gray-600">一般的な制作会社との料金の違いをご覧ください。</p>
+                </div>
+                <div class="chart-container">
+                    <canvas id="pricingChart"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Flow Section -->
+        <section id="flow" class="py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold">ご利用の流れ</h2>
+                    <p class="text-gray-600 mt-2">お問い合わせから納品まで、シンプルで簡単です。</p>
+                </div>
+                
+                <div class="w-full max-w-3xl mx-auto">
+                    <div class="mb-4 flex justify-center border-b">
+                        <button id="client-flow-btn" class="flow-tab-btn py-2 px-6 block hover:text-primary focus:outline-none text-primary border-b-2 font-medium border-primary">依頼者の方へ</button>
+                        <button id="creator-flow-btn" class="flow-tab-btn py-2 px-6 block hover:text-primary focus:outline-none text-gray-500">クリエイターの方へ</button>
+                    </div>
+
+                    <div id="client-flow-content" class="flow-content">
+                        <div class="space-y-8 relative pl-10">
+                            <!-- Vertical line -->
+                            <div class="absolute top-0 left-4 w-0.5 h-full bg-indigo-200"></div>
+                            
+                            <div class="relative">
+                                <div class="absolute top-0 left-[-2.5rem] w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">1</div>
+                                <h3 class="font-bold text-lg">お問い合わせ・ヒアリング</h3>
+                                <p class="text-gray-600">専用フォームやDiscordからご連絡ください。ヒアリングシートでご要望を伺います。</p>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute top-0 left-[-2.5rem] w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">2</div>
+                                <h3 class="font-bold text-lg">見積もり・契約</h3>
+                                <p class="text-gray-600">最適なプランとお見積もりを提示します。ご納得いただけたら契約となります。</p>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute top-0 left-[-2.5rem] w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">3</div>
+                                <h3 class="font-bold text-lg">デザイン制作・提案</h3>
+                                <p class="text-gray-600">当社クリエイターが制作を開始。初稿が完成したらすぐにご提案します。</p>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute top-0 left-[-2.5rem] w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">4</div>
+                                <h3 class="font-bold text-lg">修正・最終確認</h3>
+                                <p class="text-gray-600">フィードバックを元に修正を行います。最終デザインをご確認ください。</p>
+                            </div>
+                             <div class="relative">
+                                <div class="absolute top-0 left-[-2.5rem] w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">5</div>
+                                <h3 class="font-bold text-lg">納品・お支払い</h3>
+                                <p class="text-gray-600">完成データを納品します。その後、料金をお支払いいただきます。</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="creator-flow-content" class="flow-content hidden">
+                        <div class="space-y-8 relative pl-10">
+                             <div class="absolute top-0 left-4 w-0.5 h-full bg-indigo-200"></div>
+                            <div class="relative">
+                                <div class="absolute top-0 left-[-2.5rem] w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">1</div>
+                                <h3 class="font-bold text-lg">クリエイター登録・審査</h3>
+                                <p class="text-gray-600">ポートフォリオを元に審査し、登録クリエイターとして契約します。</p>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute top-0 left-[-2.5rem] w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">2</div>
+                                <h3 class="font-bold text-lg">案件オファー</h3>
+                                <p class="text-gray-600">スキルや作風に合った案件を、報酬や納期と共にオファーします。</p>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute top-0 left-[-2.5rem] w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">3</div>
+                                <h3 class="font-bold text-lg">デザイン制作</h3>
+                                <p class="text-gray-600">クライアントの要望に基づきデザインを制作し、初稿を提出します。</p>
+                            </div>
+                            <div class="relative">
+                                <div class="absolute top-0 left-[-2.5rem] w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">4</div>
+                                <h3 class="font-bold text-lg">修正対応</h3>
+                                <p class="text-gray-600">当社からのディレクションに基づき、デザインの修正を行います。</p>
+                            </div>
+                             <div class="relative">
+                                <div class="absolute top-0 left-[-2.5rem] w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">5</div>
+                                <h3 class="font-bold text-lg">納品・報酬支払い</h3>
+                                <p class="text-gray-600">最終デザインを納品後、規定の報酬をお支払いします。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Strengths Section -->
+        <section id="strengths" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold">私たちの強み</h2>
+                    <p class="text-gray-600 mt-2">安心してご依頼いただける理由があります。</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="p-6">
+                        <h3 class="font-bold text-lg mb-2">VR特化の知見</h3>
+                        <p class="text-gray-600">VRChatの文化やトレンドを熟知したクリエイターが担当。イベントの雰囲気に最適なデザインを提案します。</p>
+                    </div>
+                     <div class="p-6">
+                        <h3 class="font-bold text-lg mb-2">ワンストップサービス</h3>
+                        <p class="text-gray-600">デザイン知識がなくても大丈夫。ヒアリングから納品まで、私たちが責任を持って進行します。</p>
+                    </div>
+                     <div class="p-6">
+                        <h3 class="font-bold text-lg mb-2">迅速な対応</h3>
+                        <p class="text-gray-600">効率的なフローと密なコミュニケーションで、スピーディーな納品を実現します。</p>
+                    </div>
+                     <div class="p-6">
+                        <h3 class="font-bold text-lg mb-2">信頼できるクリエイター</h3>
+                        <p class="text-gray-600">ポートフォリオと実績に基づき、厳しい基準でクリエイターを審査。安定した品質をお約束します。</p>
+                    </div>
+                     <div class="p-6">
+                        <h3 class="font-bold text-lg mb-2">柔軟なプラン</h3>
+                        <p class="text-gray-600">ポスター単体からロゴとのセットまで、ご予算とニーズに合わせて柔軟に対応可能です。</p>
+                    </div>
+                     <div class="p-6">
+                        <h3 class="font-bold text-lg mb-2">今後の拡張性</h3>
+                        <p class="text-gray-600">動画編集や3Dモデル制作など、将来的にはサービス範囲を拡大。あなたの活動を継続的にサポートします。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Design Assist Section (New) -->
+        <section id="design-assist" class="py-16 md:py-24">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold">デザインアシスト ✨</h2>
+                    <p class="text-gray-600 mt-2">イベントの情報を入力して、デザインコンセプトのヒントを得ましょう。</p>
+                </div>
+                <div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-md">
+                    <div class="mb-4">
+                        <label for="eventName" class="block text-gray-700 text-sm font-bold mb-2">イベント名:</label>
+                        <input type="text" id="eventName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="例: VR音楽フェス 'メタバースサウンド'">
+                    </div>
+                    <div class="mb-4">
+                        <label for="eventOverview" class="block text-gray-700 text-sm font-bold mb-2">イベント概要:</label>
+                        <textarea id="eventOverview" rows="4" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="例: 複数のVRアーティストが出演する、未来的な空間での大規模な音楽イベント。"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label for="targetAudience" class="block text-gray-700 text-sm font-bold mb-2">ターゲット層:</label>
+                        <input type="text" id="targetAudience" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="例: VR音楽ファン、テクノロジー好き、20代〜30代">
+                    </div>
+                    <div class="mb-6">
+                        <label for="eventMood" class="block text-gray-700 text-sm font-bold mb-2">ムード/雰囲気:</label>
+                        <input type="text" id="eventMood" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="例: サイバーパンク、エネルギッシュ、没入感">
+                    </div>
+                    <button id="generateDesignConcept" class="bg-primary text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity w-full">デザインコンセプトを生成 ✨</button>
+                    <div id="designConceptOutput" class="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200 min-h-[100px] text-gray-800 whitespace-pre-wrap">
+                        <!-- Generated content will appear here -->
+                        <p class="text-gray-500">ここにデザインコンセプトが表示されます。</p>
+                    </div>
+                    <div id="loadingIndicator" class="hidden text-center mt-4 text-primary font-bold">
+                        生成中...
+                    </div>
+                    <div id="errorMessage" class="hidden text-center mt-4 text-red-500 font-bold">
+                        エラーが発生しました。もう一度お試しください。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold">よくあるご質問 (Q&A)</h2>
+                    <p class="text-gray-600 mt-2">ご依頼前に、疑問や不安を解消します。</p>
+                </div>
+                <div class="max-w-3xl mx-auto space-y-4">
+                    <div class="faq-item bg-white rounded-lg shadow-sm">
+                        <button class="faq-question w-full text-left p-4 font-semibold flex justify-between items-center">
+                            <span>低価格だけど、品質は本当に大丈夫？</span>
+                            <span class="faq-arrow text-primary text-2xl transform transition-transform">＋</span>
+                        </button>
+                        <div class="faq-answer hidden p-4 pt-0 text-gray-700">
+                            <p>はい、ご安心ください。私たちは実績豊富なクリエイターを厳選し、ポートフォリオ審査を行っています。また、制作プロセスでは明確なディレクションと複数回のチェック体制を敷き、高品質なデザインを保証します。</p>
+                        </div>
+                    </div>
+                    <div class="faq-item bg-white rounded-lg shadow-sm">
+                        <button class="faq-question w-full text-left p-4 font-semibold flex justify-between items-center">
+                            <span>希望通りのデザインになるか心配…</span>
+                            <span class="faq-arrow text-primary text-2xl transform transition-transform">＋</span>
+                        </button>
+                        <div class="faq-answer hidden p-4 pt-0 text-gray-700">
+                            <p>制作開始前に詳細なヒアリングシートを用いて、お客様のイメージを具体的に把握します。参考画像などを共有いただくことで、イメージのズレを最小限に抑えます。また、規定回数内の修正は無料で対応いたします。</p>
+                        </div>
+                    </div>
+                    <div class="faq-item bg-white rounded-lg shadow-sm">
+                        <button class="faq-question w-full text-left p-4 font-semibold flex justify-between items-center">
+                            <span>納期は守られますか？</span>
+                            <span class="faq-arrow text-primary text-2xl transform transition-transform">＋</span>
+                        </button>
+                        <div class="faq-answer hidden p-4 pt-0 text-gray-700">
+                            <p>はい、納期遵守を徹底しています。余裕を持ったスケジュールを設定し、進捗状況を適宜ご報告します。万が一の事態に備え、代替クリエイターを確保するなどの対策も講じています。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Contact Section -->
+        <section id="contact" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-4 text-center">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">さあ、あなたのイベントを<br>特別なものにしましょう</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8">ご相談、お見積もりは無料です。まずはお気軽にお問い合わせください。</p>
+                <a href="https://twitter.com" target="_blank" class="bg-primary text-white font-bold py-3 px-8 rounded-lg text-lg hover:opacity-90 transition-opacity">X (旧Twitter)で相談する</a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto px-4 py-8 text-center">
+            <p>&copy; 2025 VR Design Broker Service. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    if(mobileMenu.classList.contains('hidden') === false){
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 100) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active-nav');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active-nav');
+                    }
+                });
+            });
+
+
+            const clientBtn = document.getElementById('client-flow-btn');
+            const creatorBtn = document.getElementById('creator-flow-btn');
+            const clientContent = document.getElementById('client-flow-content');
+            const creatorContent = document.getElementById('creator-flow-content');
+            const flowTabs = [clientBtn, creatorBtn];
+
+            function switchFlowTab(isClient) {
+                 flowTabs.forEach(btn => {
+                    btn.classList.remove('text-primary', 'border-primary', 'font-medium');
+                    btn.classList.add('text-gray-500');
+                });
+                if(isClient) {
+                    clientBtn.classList.add('text-primary', 'border-primary', 'font-medium');
+                    clientBtn.classList.remove('text-gray-500');
+                    clientContent.classList.remove('hidden');
+                    creatorContent.classList.add('hidden');
+                } else {
+                    creatorBtn.classList.add('text-primary', 'border-primary', 'font-medium');
+                    creatorBtn.classList.remove('text-gray-500');
+                    creatorContent.classList.remove('hidden');
+                    clientContent.classList.add('hidden');
+                }
+            }
+            clientBtn.addEventListener('click', () => switchFlowTab(true));
+            creatorBtn.addEventListener('click', () => switchFlowTab(false));
+
+            const faqItems = document.querySelectorAll('.faq-item');
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question');
+                const answer = item.querySelector('.faq-answer');
+                const arrow = item.querySelector('.faq-arrow');
+
+                question.addEventListener('click', () => {
+                    const isVisible = !answer.classList.contains('hidden');
+                    answer.classList.toggle('hidden');
+                    arrow.textContent = isVisible ? '＋' : '－';
+                    arrow.classList.toggle('rotate-45', !isVisible);
+                });
+            });
+
+
+            const ctx = document.getElementById('pricingChart').getContext('2d');
+            const chartData = {
+                poster: {
+                    labels: ['当サービス (下限)', '当サービス (上限)', '一般的な制作会社'],
+                    data: [5000, 15000, 40000],
+                    title: 'ポスタープランの価格比較'
+                },
+                logo: {
+                    labels: ['当サービス (下限)', '当サービス (上限)', '一般的な制作会社'],
+                    data: [10000, 25000, 60000],
+                    title: 'ロゴプランの価格比較'
+                },
+                set: {
+                    labels: ['当サービス (下限)', '当サービス (上限)', '一般的な制作会社'],
+                    data: [12000, 35000, 90000],
+                    title: 'セットプランの価格比較'
+                }
+            };
+            
+            let pricingChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.poster.labels,
+                    datasets: [{
+                        label: '料金 (円)',
+                        data: chartData.poster.data,
+                        backgroundColor: [
+                            'rgba(108, 99, 255, 0.6)',
+                            'rgba(108, 99, 255, 0.8)',
+                            'rgba(201, 203, 207, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(108, 99, 255, 1)',
+                            'rgba(108, 99, 255, 1)',
+                            'rgba(201, 203, 207, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value.toLocaleString() + '円';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        label += context.parsed.x.toLocaleString() + '円';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const pricingCards = document.querySelectorAll('.pricing-card');
+            const chartTitle = document.getElementById('chart-title');
+
+            pricingCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    pricingCards.forEach(c => {
+                        c.classList.remove('border-primary', 'border-2');
+                        c.classList.add('opacity-70', 'hover:opacity-100');
+                    });
+                    card.classList.add('border-primary', 'border-2');
+                    card.classList.remove('opacity-70', 'hover:opacity-100');
+
+                    const plan = card.id.replace('plan-', '');
+                    pricingChart.data.labels = chartData[plan].labels;
+                    pricingChart.data.datasets[0].data = chartData[plan].data;
+                    chartTitle.textContent = chartData[plan].title;
+                    pricingChart.update();
+                });
+            });
+
+            // Gemini API Integration for Design Assist
+            const generateDesignConceptBtn = document.getElementById('generateDesignConcept');
+            const eventNameInput = document.getElementById('eventName');
+            const eventOverviewTextarea = document.getElementById('eventOverview');
+            const targetAudienceInput = document.getElementById('targetAudience');
+            const eventMoodInput = document.getElementById('eventMood');
+            const designConceptOutput = document.getElementById('designConceptOutput');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorMessage = document.getElementById('errorMessage');
+
+            generateDesignConceptBtn.addEventListener('click', async () => {
+                const eventName = eventNameInput.value;
+                const eventOverview = eventOverviewTextarea.value;
+                const targetAudience = targetAudienceInput.value;
+                const eventMood = eventMoodInput.value;
+
+                if (!eventName || !eventOverview || !targetAudience || !eventMood) {
+                    errorMessage.textContent = 'すべての項目を入力してください。';
+                    errorMessage.classList.remove('hidden');
+                    designConceptOutput.innerHTML = '';
+                    return;
+                }
+
+                loadingIndicator.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+                designConceptOutput.innerHTML = ''; // Clear previous content
+
+                const prompt = `あなたはプロのVRイベントデザイナーです。以下のイベント情報に基づいて、イベントポスターやロゴデザインのコンセプト、色のアイデア、視覚的な要素の提案をしてください。箇条書きで分かりやすく、簡潔にまとめてください。
+
+イベント名: ${eventName}
+イベント概要: ${eventOverview}
+ターゲット層: ${targetAudience}
+ムード/雰囲気: ${eventMood}`;
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        designConceptOutput.textContent = text;
+                    } else {
+                        errorMessage.textContent = 'デザインコンセプトの生成に失敗しました。';
+                        errorMessage.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error calling Gemini API:', error);
+                    errorMessage.textContent = 'ネットワークエラーが発生しました。';
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    loadingIndicator.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
